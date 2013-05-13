@@ -111,7 +111,17 @@ namespace Comm
 			if(_sock == null)
 				return;
 			
-			_outSock = _sock.EndAccept(ar);
+			try{
+				_outSock = _sock.EndAccept(ar);
+			}catch(Exception e){
+				_outSock = null;
+				if(_sock != null){
+					_sock.Close();
+					_sock = null;
+				}
+				_ecb(e);
+				return;
+			}
 
 			_sock.Close();
 			_sock = null;
@@ -144,9 +154,9 @@ namespace Comm
 			}
 		}
 
-		void SendData(string line)
+		public void SendData(string line)
 		{
-			char[] chArr = (line + '\n').ToCharArray();
+			char[] chArr = line.ToCharArray();
 			int bufLen = chArr.Length;
 			byte[] buffer = new byte[bufLen];
 
@@ -154,11 +164,6 @@ namespace Comm
 				buffer[i] = (byte)chArr[i];
 			
 			_outSock.Send(buffer, 0, bufLen, SocketFlags.None);
-		}
-
-		public void SendMessage(string line)
-		{
-			SendData("MSG: " + line);
 		}
 	}
 }

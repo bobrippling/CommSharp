@@ -29,6 +29,7 @@ namespace Comm
 		}
 
 		SocketWrap _wrap;
+		Protocol _proto;
 
 		public CommWin()
 		{
@@ -36,6 +37,7 @@ namespace Comm
 
 			_state = State.IDLE;
 			_wrap = new SocketWrap(Connected, Accepted, Received, Disconnected, Error);
+			_proto = new Protocol(ReceivedMessage);
 
 			UpdateCtrls();
 			this.Show();
@@ -96,7 +98,12 @@ namespace Comm
 
 		void Received(string data)
 		{
-			AddText("Recv: {0}", data);
+			_proto.HandleData(data);
+		}
+
+		void ReceivedMessage(string msg)
+		{
+			AddText("Recv: {0}", msg);
 		}
 
 		private void txtIn_KeyPress(object sender, KeyPressEventArgs e)
@@ -106,7 +113,11 @@ namespace Comm
 				e.Handled = true;
 
 				string txt = txtIn.Text;
-				_wrap.SendMessage(txt);
+				if(txt.Length == 0)
+					return;
+
+				_proto.SendMessage(txt, _wrap);
+				
 				AddText("Sent: " + txt);
 				txtIn.Text = "";
 			}
